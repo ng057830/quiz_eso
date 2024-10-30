@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Matemáticas 1º ESO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb; 
+            --secondary-color: #10b981; 
+            --background-color: #f8fafc; 
+            --text-color: #1e293b; 
+            --border-color: #e2e8f0; 
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .screen {
+            display: none;
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        h2 {
+            color: var(--secondary-color);
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #1d4ed8; 
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .option {
+            padding: 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center; 
+        }
+
+        .option:hover {
+            border-color: var(--secondary-color);
+            background-color: #f0f9ff;
+        }
+
+        .option.selected {
+            border-color: var(--primary-color);
+            background-color: #e0f2fe;
+        }
+
+        .hint-container {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #f0fdf4;
+            border-radius: 0.5rem;
+            border: 1px solid var(--secondary-color);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 0.5rem;
+            background-color: var(--border-color);
+            border-radius: 0.25rem;
+            margin: 1rem 0;
+            overflow: hidden; 
+        }
+
+        .progress {
+            height: 100%;
+            background-color: var(--primary-color);
+            border-radius: 0.25rem;
+            transition: width 0.3s ease-in-out; 
+            width: 0%; 
+        }
+
+        #hintBtn {
+            background-color: var(--secondary-color);
+            margin-top: 1rem;
+        }
+
+        #hintBtn:hover {
+            background-color: #047857; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="startScreen" class="screen active">
+            <h1>Quiz de Matemáticas 1º ESO</h1>
+            <h2>¡Pon a prueba tus conocimientos!</h2>
+            <p>Este quiz te ayudará a repasar los conceptos de proporcionalidad, lenguaje algebraico, monomios y polinomios.</p>
+            <button class="btn" onclick="startQuiz()">Comenzar Quiz</button>
+        </div>
+
+        <div id="quizScreen" class="screen">
+            <div class="progress-bar">
+                <div id="progress" class="progress"></div>
+            </div>
+            <h2 id="questionText"></h2>
+            <div id="options" class="options"></div>
+            <button id="hintBtn" class="btn" onclick="showHint()">Mostrar Pista</button>
+            <div id="hintContainer" class="hint-container" style="display: none;"></div>
+        </div>
+
+        <div id="resultsScreen" class="screen">
+            <h1>Resultados del Quiz</h1>
+            <h2 id="score"></h2>
+            <p id="feedback"></p>
+            <button class="btn" onclick="restartQuiz()">Intentar de Nuevo</button>
+        </div>
+    </div>
+
+    <script>
+        MathJax.Hub.Config({
+            tex2jax: { inlineMath: [['\\(', '\\)']] }
+        });
+
+        const questions = [
+            {
+                question: "Si 3 lápices cuestan 1,50€, ¿cuánto costarán 7 lápices?",
+                options: ["3,50€", "3€", "4€", "4,50€"],
+                correct: 0,
+                hints: [
+                    "Recuerda que puedes usar una regla de tres simple",
+                    "Primero, calcula el precio de un lápiz"
+                ]
+            },
+            {
+                question: "Un coche recorre 120 km en 2 horas. ¿Cuánto tiempo tardará en recorrer 300 km a la misma velocidad?",
+                options: ["4 horas", "5 horas", "6 horas", "7 horas"],
+                correct: 1,
+                hints: [
+                    "La velocidad es constante, por lo que puedes usar una regla de tres",
+                    "Calcula primero cuántos kilómetros recorre el coche en una hora"
+                ]
+            },
+            {
+                question: "Expresa en lenguaje algebraico: 'el doble de un número menos tres unidades'",
+                options: ["\\( 2x - 3 \\)", "\\( 3x - 2 \\)", "\\( x/2 - 3 \\)", "\\( x - 3/2 \\)"],
+                correct: 0,
+                hints: [
+                    "Usa una variable (como 'x') para representar el número desconocido",
+                    "'El doble de un número' se traduce como 2 multiplicado por la variable"
+                ]
+            },
+            {
+                question: "Si \\( x = 5 \\), ¿cuál es el valor de la expresión \\( 3x + 2 \\)?",
+                options: ["17", "15", "13", "10"],
+                correct: 0,
+                hints: [
+                    "Sustituye la variable 'x' por su valor numérico",
+                    "Recuerda el orden de las operaciones: primero la multiplicación"
+                ]
+            },
+            {
+                question: "¿Cuál es el coeficiente del monomio \\( -7x²y \\)?",
+                options: ["-7", "7", "2", "1"],
+                correct: 0,
+                hints: [
+                    "El coeficiente es el número que multiplica a la parte literal",
+                    "La parte literal está formada por las variables y sus exponentes"
+                ]
+            },
+            {
+                question: "Reduce la siguiente expresión: \\( 3x + 5y - 2x + y \\)",
+                options: ["\\( x + 6y \\)", "\\( 5x +6y \\)", "\\( x + 4y \\)", "\\( 5x + 4y \\)"],
+                correct: 0,
+                hints: [
+                    "Agrupa los términos semejantes (los que tienen la misma parte literal)",
+                    "Suma o resta los coeficientes de los términos semejantes"
+                ]
+            },
+            {
+                question: "Calcula el producto de los monomios: \\( (2x³) (-5x²) \\)",
+                options: ["\\( -10x⁵ \\)", "\\( 10x⁵ \\)", "\\( -10x⁶ \\)", "\\( 10x⁶ \\)"],
+                correct: 0,
+                hints: [
+                    "Multiplica los coeficientes entre sí",
+                    "Suma los exponentes de las variables iguales"
+                ]
+            },
+            {
+                question: "¿Cuál de las siguientes expresiones NO es un polinomio?",
+                options: ["\\( 3x² + 2x - 5 \\)", "\\( \\frac{1}{x} + 2 \\)", "\\( x³ - 7 \\)", "\\( 4x²y - 3xy² \\)"],
+                correct: 1,
+                hints: [
+                    "Un polinomio es una suma de monomios",
+                    "Los exponentes de las variables en un polinomio deben ser números enteros no negativos"
+                ]
+            },
+            {
+                question: "¿Cuál es el grado del polinomio \\( 2x⁴ - 3x² + 5x - 1 \\)?",
+                options: ["4", "3", "2", "1"],
+                correct: 0,
+                hints: [
+                    "El grado de un polinomio es el mayor de los grados de sus monomios",
+                    "El grado de un monomio es la suma de los exponentes de sus variables"
+                ]
+            },
+            {
+                question: "Calcula la suma de los polinomios: \\( (2x² + 3x - 1) + (x² - 2x + 4) \\)",
+                options: ["\\( 3x² + x + 3 \\)", "\\( 3x² + 5x + 3 \\)", "\\( 2x² + x + 5 \\)", "\\( 2x² + 5x + 5 \\)"],
+                correct: 0,
+                hints: [
+                    "Elimina los paréntesis",
+                    "Agrupa los términos semejantes y suma sus coeficientes"
+                ]
+            },
+            {
+                question: "Si un pantalón cuesta \\( x \\) euros y una camisa cuesta \\( y \\) euros, ¿cómo se expresa en lenguaje algebraico el precio de 3 pantalones y 2 camisas?",
+                options: ["\\( 3x + 2y \\)", "\\( 2x + 3y \\)", "\\( 5xy \\)", "\\( 6xy \\)"],
+                correct: 0,
+                hints: [
+                    "El precio de 3 pantalones es 3 multiplicado por el precio de un pantalón",
+                    "El precio de 2 camisas es 2 multiplicado por el precio de una camisa"
+                ]
+            },
+            {
+                question: "Simplifica la siguiente expresión: \\( 5x² - 2x (x + 3) \\)",
+                options: ["\\( 3x² - 6x \\)", "\\( 3x² + 6x \\)", "\\( 7x² - 6x \\)", "\\( 7x² + 6x \\)"],
+                correct: 0,
+                hints: [
+                    "Primero, aplica la propiedad distributiva para eliminar el paréntesis",
+                    "Luego, agrupa los términos semejantes"
+                ]
+            },
+            {
+                question: "¿Cuál es el resultado de dividir \\( 12x⁴y² \\) entre \\( 3x²y \\)?",
+                options: ["\\( 4x²y \\)", "\\( 4xy \\)", "\\( 9x²y \\)", "\\( 9xy \\)"],
+                correct: 0,
+                hints: [
+                    "Divide los coeficientes entre sí",
+                    "Resta los exponentes de las variables iguales"
+                ]
+            },
+            {
+                question: "Expresa en lenguaje algebraico: 'la suma de dos números consecutivos'",
+                options: ["\\( x + (x + 1) \\)", "\\( x + (x - 1) \\)", "\\( 2x + 1 \\)", "\\( 2x - 1 \\)"],
+                correct: 0,
+                hints: [
+                    "Si un número es 'x', el siguiente consecutivo es 'x + 1'",
+                    "Recuerda que 'suma' se traduce con el signo +"
+                ]
+            },
+            {
+                question: "¿Cuál es el resultado de la siguiente operación: \\( (3x² - 2x + 5) - (x² + 4x - 1) \\)?",
+                options: ["\\( 2x² - 6x + 6 \\)", "\\( 2x² + 2x + 4 \\)", "\\( 4x² - 6x + 6 \\)", "\\( 4x² + 2x + 4 \\)"],
+                correct: 0,
+                hints: [
+                    "Cambia el signo de todos los términos del segundo polinomio",
+                    "Luego, agrupa los términos semejantes y suma o resta sus coeficientes"
+                ]
+            },
+            {
+                question: "Si \\( a = 2 \\) y \\( b = -3 \\), ¿cuál es el valor de la expresión \\( a² - 2ab + b² \\)?",
+                options: ["25", "1", "-11", "-23"],
+                correct: 0,
+                hints: [
+                    "Sustituye las variables 'a' y 'b' por sus valores numéricos",
+                    "Recuerda que \\( (-3)² = 9 \\) y que \\( 2 \cdot 2 \cdot (-3) = -12 \\)"
+                ]
+            },
+            {
+                question: "Un rectángulo tiene un lado que mide \\( x \\) cm y otro lado que mide \\( (x + 2) \\) cm. ¿Cuál es su perímetro?",
+                options: ["\\( 4x + 4 \\) cm", "\\( 2x + 2 \\) cm", "\\( x² + 2x \\) cm", "\\( 2x² + 4x \\) cm"],
+                correct: 0,
+                hints: [
+                    "El perímetro de un rectángulo es la suma de las longitudes de sus cuatro lados",
+                    "Recuerda que el rectángulo tiene dos lados de longitud \\( x \\) y dos lados de longitud \\( (x + 2) \\)"
+                ]
+            },
+            {
+                question: "¿Cuál es el área de un triángulo cuya base mide \\( 2x \\) cm y su altura mide \\( 3x \\) cm?",
+                options: ["\\( 3x² \\) cm²", "\\( 6x² \\) cm²", "\\( 5x² \\) cm²", "\\( 10x² \\) cm²"],
+                correct: 0,
+                hints: [
+                    "El área de un triángulo es igual a (base x altura) / 2",
+                    "Sustituye la base y la altura por sus valores y simplifica la expresión"
+                ]
+            }
+        ];
+
+        function shuffleOptions(question) {
+            for (let i = question.options.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [question.options[i], question.options[j]] = [question.options[j], question.options[i]];
+                if (question.correct === i) {
+                    question.correct = j;
+                } else if (question.correct === j) {
+                    question.correct = i;
+                }
+            }
+        }
+
+        questions.forEach(shuffleOptions);
+
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedOption = null;
+        let currentHint = 0;
+
+        function startQuiz() {
+            document.getElementById('startScreen').classList.remove('active');
+            document.getElementById('quizScreen').classList.add('active');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const question = questions[currentQuestion];
+            document.getElementById('questionText').innerHTML = question.question;
+            document.getElementById('progress').style.width = `${(currentQuestion / questions.length) * 100}%`;
+            
+            const optionsContainer = document.getElementById('options'); optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.innerHTML = option;
+                optionDiv.onclick = () => {
+                    selectOption(index);
+                    nextQuestion();
+                };
+                optionsContainer.appendChild(optionDiv);
+            });
+
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+            
+            document.getElementById('hintContainer').style.display = 'none';
+            currentHint = 0;
+            selectedOption = null;
+        }
+
+        function selectOption(index) {
+            const options = document.querySelectorAll('.option');
+            options.forEach(option => option.classList.remove('selected'));
+            options[index].classList.add('selected');
+            selectedOption = index;
+        }
+
+        function showHint() {
+            const question = questions[currentQuestion];
+            if (currentHint < question.hints.length) {
+                const hintContainer = document.getElementById('hintContainer');
+                hintContainer.style.display = 'block';
+                hintContainer.innerHTML = question.hints[currentHint];
+                currentHint++;
+                MathJax.Hub.Queue(["Typeset", MathJax.Hub, hintContainer]); 
+            }
+        }
+
+        function nextQuestion() {
+            if (selectedOption !== null) {
+                if (selectedOption === questions[currentQuestion].correct) {
+                    score++;
+                }
+                
+                currentQuestion++;
+                
+                if (currentQuestion < questions.length) {
+                    showQuestion();
+                } else {
+                    showResults();
+                }
+            } else {
+                alert('Por favor selecciona una opción');
+            }
+        }
+
+        function showResults() {
+            document.getElementById('quizScreen').classList.remove('active');
+            document.getElementById('resultsScreen').classList.add('active');
+            
+            const scoreElement = document.getElementById('score');
+            const feedbackElement = document.getElementById('feedback');
+            
+            scoreElement.textContent = `Puntuación: ${score} de ${questions.length}`;
+            
+            if (score >= questions.length * 0.8) {
+                feedbackElement.textContent = "¡Excelente! Dominas los conceptos de matemáticas de 1º de ESO.";
+            } else if (score >= questions.length * 0.6) {
+                feedbackElement.textContent = "Buen trabajo, pero aún puedes mejorar. ¡Sigue practicando!";
+            } else {
+                feedbackElement.textContent = "Parece que necesitas repasar algunos temas. ¡No te preocupes, puedes volver a intentarlo!";
+            }
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            selectedOption = null;
+            document.getElementById('resultsScreen').classList.remove('active');
+            document.getElementById('startScreen').classList.add('active');
+            questions.forEach(shuffleOptions); 
+        }
+    </script>
+</body>
+</html>
